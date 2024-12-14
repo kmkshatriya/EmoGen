@@ -1,3 +1,4 @@
+import os
 from os import listdir, path
 import numpy as np
 import scipy, cv2, os, sys, argparse, audio
@@ -266,7 +267,9 @@ def main():
 			print ("Model loaded")
 
 			frame_h, frame_w = full_frames[0].shape[:-1]
-			out = cv2.VideoWriter('temp/result.avi', 
+			# out = cv2.VideoWriter('temp/result.avi', 
+			temp_file = f"{path.dirname(args.outfile)}/temp.avi"
+			out = cv2.VideoWriter(temp_file, 
 									cv2.VideoWriter_fourcc(*'DIVX'), fps, (frame_w, frame_h))
 
 		img_batch = torch.FloatTensor(np.transpose(img_batch, (0, 3, 1, 2))).to(device)
@@ -274,7 +277,9 @@ def main():
 		emotion = emotion_.unsqueeze(0).repeat(img_batch.shape[0], 1)
 
 		with torch.no_grad():
+			# pred,_ = model(mel_batch, img_batch, emotion)
 			pred = model(mel_batch, img_batch, emotion)
+
 
 		pred = pred.cpu().numpy().transpose(0, 2, 3, 1) * 255.
 		
@@ -291,8 +296,11 @@ def main():
 
 	out.release()
 
-	command = 'ffmpeg -y -i {} -i {} -strict -2 -q:v 1 {}'.format(args.audio, 'temp/result.avi', f'results/{emo}.mp4')
+	# command = 'ffmpeg -y -i {} -i {} -strict -2 -q:v 1 {}'.format(args.audio, 'temp/result.avi', f'results/{emo}.mp4')
+	command = 'ffmpeg -y -i {} -i {} -strict -2 -q:v 1 {}'.format(args.audio, temp_file, args.outfile)
+
 	subprocess.call(command, shell=platform.system() != 'Windows')
+	os.remove(temp_file)
 
 if __name__ == '__main__':
 	main()

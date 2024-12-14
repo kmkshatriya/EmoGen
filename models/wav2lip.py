@@ -105,17 +105,17 @@ class Wav2Lip(nn.Module):
 
         #emotion = (B, 6)
         # repeating the same emotion for every frame
-        emotion = emotion.unsqueeze(1).repeat(1, 5, 1) #(B, T, 6) 
+        # emotion = emotion.unsqueeze(1).repeat(1, 5, 1) #(B, T, 6) 
 
         input_dim_size = len(face_sequences.size())
         if input_dim_size > 4:
             audio_sequences = torch.cat([audio_sequences[:, i] for i in range(audio_sequences.size(1))], dim=0)
-            emotion = torch.cat([emotion[:, i] for i in range(emotion.size(1))], dim=0) #(B*T, 6)
+            # emotion = torch.cat([emotion[:, i] for i in range(emotion.size(1))], dim=0) #(B*T, 6)
             face_sequences = torch.cat([face_sequences[:, :, i] for i in range(face_sequences.size(2))], dim=0)
 
         audio_embedding = self.audio_encoder(audio_sequences) # B*T, 512, 1, 1
         emotion_embedding = self.emotion_encoder(emotion)
-        # ee_needed =  torch.mean(emotion_embedding,0).unsqueeze(0)
+        ee_needed =  torch.mean(emotion_embedding,0).unsqueeze(0)
         
         emotion_embedding = emotion_embedding.view(-1,512,1,1) # B*T, 512, 1, 1
 
@@ -147,7 +147,7 @@ class Wav2Lip(nn.Module):
         else:
             outputs = x
         
-        return outputs
+        return outputs,ee_needed
 
 
 class Wav2Lip_disc_qual(nn.Module):
